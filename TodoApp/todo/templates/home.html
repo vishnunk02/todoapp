@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+  <script src="https://kit.fontawesome.com/49ddd94397.js" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="../static/in.css">
+  <title>ToDo</title>
+  <style>
+    body {
+      background: url('https://images.unsplash.com/photo-1644329843491-99edfc83de04?q=80&w=1471&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+    }
+
+    .car {
+      width: 100%;
+      box-shadow: 10px 10px 20px rgb(60, 60, 60);
+      border-radius: 20px 0px 0px 0px;
+    }
+
+    table.table-transparent {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    table.table-transparent th,
+    table.table-transparent td {
+      background: transparent;
+    }
+
+    button {
+      background: transparent;
+      border: none;
+    }
+  </style>
+
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="navbar-brand ms-4" href="{% url 'home' %}"><i class="fa-solid fa-check"></i></a>
+      <a class="navbar-brand"><b>ToDo</b></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        </ul>
+        <form class="d-flex" role="search">
+          {% if request.user.first_name %}
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <button style="text-transform: uppercase;" class="btn btn-outline-dark me-5" type="button"
+              data-bs-toggle="offcanvas" data-bs-target="#offcanvasExample{{request.user.first_name}}"
+              aria-controls="offcanvasExample{{request.user.first_name}}">
+              {{request.user.first_name}}
+            </button>
+            <li class="nav-item me-5">
+              <a class="nav-link active" aria-current="page" href="{% url 'signout' %}"><i
+                  class="fa-solid fa-right-from-bracket"></i></a>
+            </li>
+          </ul>
+          {% else %}
+          <div class="btn-group dropdown">
+            <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+              Not Logged In
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="{% url 'signin' %}">Sign-In</a></li>
+              <li><a class="dropdown-item" href="{% url 'signup' %}">Sign-Up</a></li>
+            </ul>
+          </div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </nav>
+  {% if request.user.is_authenticated %}
+  <div class="container mt-5">
+    <div class="car p-3">
+      <div class="row">
+        <div class="col-10"><h3 class="ms-2">Task List</h3></div>
+        <div class="col-2"><a class="btn btn-outline-dark" href="{% url 'todoform' %}">Create Taks</a></div>
+      </div>
+      <hr>
+      <table class="table table-borderless table-transparent">
+        <thead>
+        </thead>
+        <tbody>
+          {% for i in form %}
+            <tr>
+              <td>
+                <h5>{{i.task_name}}</h5>
+              </td>
+              <td>{{i.created_data}}</td>
+              {% if i.status == True %}
+              <td>Done</td>
+              {% else %}
+              <td>Not Done</td>
+              {% endif %}
+              <td><a class="text-dark" href="{% url 'deletedata' i.id %}"><i class="fa-solid fa-xmark"></i></a></td>
+              <td>
+                <form method="POST" action="{% url 'todoeditdata' i.id %}" id="myForm{{i.id}}">
+                  {% csrf_token %}
+                  {% if i.status == True %}
+                    <input type="checkbox" id="myCheckbox{{i.id}}" name="myCheckbox{{i.id}}" checked>
+                  {% else %}
+                    <input type="checkbox" id="myCheckbox{{i.id}}" name="myCheckbox{{i.id}}">
+                  {% endif %}
+                  <script>
+                    $(document).ready(function () {
+                      $('#myCheckbox{{i.id}}').change(function () {
+                        var isChecked = $(this).is(':checked');
+                        $('#myForm{{i.id}}').append('<input type="hidden" name="myCheckbox{{i.id}}" value="' + isChecked + '">');
+                        $('#myForm{{i.id}}').submit();
+                      });
+                    });
+                  </script>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+    </div>
+  </div>
+
+
+
+  <div class="offcanvas offcanvas-start text-white" style="background:transparent; backdrop-filter:blur(20px)"
+    tabindex="-1" id="offcanvasExample{{request.user.first_name}}"
+    aria-labelledby="offcanvasExampleLabel{{request.user.first_name}}">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="offcanvasExampleLabel{{request.user.first_name}}">Profile</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div>
+        <img
+          src="https://static.vecteezy.com/system/resources/thumbnails/020/765/399/small/default-profile-account-unknown-icon-black-silhouette-free-vector.jpg"
+          style="width: 25%;" class="rounded-circle border border-1 ms-5" alt="...">
+        <ul class="mt-4">
+          <li><b>First Name:</b>{{request.user.first_name}}</li>
+          <li><b>Last Name:</b>{{request.user.last_name}}</li>
+          <li><b>Email:</b>{{request.user.email}}</li>
+          <li><b>Date Joined:</b>{{request.user.date_joined}}</li>
+        </ul>
+        <a class="nav-link active" aria-current="page" href="{% url 'signout' %}">
+          <button type="submit" class="btn btn-outline-dark text-white">Logout <i
+              class="fa-solid fa-right-from-bracket"></i></button></a>
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+
+</body>
+
+
+</html>
